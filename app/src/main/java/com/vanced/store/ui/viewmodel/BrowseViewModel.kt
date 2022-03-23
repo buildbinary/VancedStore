@@ -1,75 +1,50 @@
 package com.vanced.store.ui.viewmodel
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vanced.store.domain.manager.BrowseLayoutMode
+import com.vanced.store.domain.manager.PreferenceManager
 import com.vanced.store.domain.model.BrowseAppModel
 import com.vanced.store.domain.repository.BrowseRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class BrowseViewModel(
-    private val browseRepository: BrowseRepository
+    private val browseRepository: BrowseRepository,
+    private val preferenceManager: PreferenceManager,
 ) : ViewModel() {
 
-    sealed class Screen {
-        object Loading : Screen()
-        object Browse : Screen()
-        object Search : Screen()
+    sealed class State {
+        object Loading : State()
+        class Loaded(val apps: List<BrowseAppModel>) : State()
 
         val isLoading get() = this is Loading
-        val isBrowse get() = this is Browse
-        val isSearch get() = this is Search
+        val isLoaded get() = this is Loaded
     }
 
-    enum class LayoutMode {
-        LIST, GRID
-    }
-
-    private var apps = listOf<BrowseAppModel>()
-
-    var screen by mutableStateOf<Screen>(Screen.Loading)
+    var state by mutableStateOf<State>(State.Loading)
         private set
 
-    var layoutMode by mutableStateOf(LayoutMode.LIST)
+    var layoutMode by mutableStateOf(preferenceManager.browseLayoutMode)
         private set
-
-    var searchText by mutableStateOf("")
-        private set
-
-    val searchApps = mutableStateListOf<BrowseAppModel>()
-
-    val browseApps = mutableStateListOf<BrowseAppModel>()
 
     fun loadApps() {
         viewModelScope.launch {
-
+            state = State.Loading
+            delay(1000L)
+            state = State.Loaded(browseRepository.getApps())
         }
     }
 
-    fun switchLayoutMode(newMode: LayoutMode) {
+    fun switchLayoutMode(newMode: BrowseLayoutMode) {
         layoutMode = newMode
+        preferenceManager.browseLayoutMode = newMode
     }
 
-    fun search(query: String) {
-        searchText = query
-        val filteredApps = apps.filter {
-            it.appName.contains(query) || it.appDescription.contains(query)
-        }
-        searchApps.clear()
-        searchApps.addAll(filteredApps)
-    }
-
-    fun enterSearchScreen() {
-        searchApps.addAll(apps)
-        screen = Screen.Search
-    }
-
-    fun exitSearchScreen() {
-        screen = Screen.Browse
-        searchApps.clear()
-        searchText = ""
+    init {
+        loadApps()
     }
 }

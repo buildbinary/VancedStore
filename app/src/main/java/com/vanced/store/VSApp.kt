@@ -1,9 +1,7 @@
 package com.vanced.store
 
 import android.app.Application
-import com.vanced.store.di.httpModule
-import com.vanced.store.di.repositoryModule
-import com.vanced.store.di.viewModelModule
+import com.vanced.store.di.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -18,7 +16,9 @@ class VSApp : Application() {
             modules(
                 httpModule,
                 repositoryModule,
-                viewModelModule
+                viewModelModule,
+                managerModule,
+                databaseModule
             )
         }
     }

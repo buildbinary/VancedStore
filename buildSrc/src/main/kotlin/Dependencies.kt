@@ -36,6 +36,36 @@ sealed class Dependencies {
         }
     }
 
+    object AndroidxPreferences : Dependencies() {
+        private const val version = "1.2.0"
+
+        private const val preference = "androidx.preference:preference:$version"
+        private const val preferenceKtx = "androidx.preference:preference-ktx:$version"
+
+        override fun applyDependencies(scope: DependencyHandlerScope) {
+            scope {
+                implementation(preference)
+                implementation(preferenceKtx)
+            }
+        }
+    }
+
+    object AndroidxRoom : Dependencies() {
+        private const val version = "2.4.2"
+
+        private const val roomRuntime = "androidx.room:room-runtime:$version"
+        private const val roomKtx = "androidx.room:room-ktx:$version"
+        private const val roomCompiler = "androidx.room:room-compiler:$version"
+
+        override fun applyDependencies(scope: DependencyHandlerScope) {
+            scope {
+                implementation(roomRuntime)
+                implementation(roomKtx)
+                ksp(roomCompiler)
+            }
+        }
+    }
+
     object Compose : Dependencies() {
         const val version = "1.2.0-alpha05"
 
@@ -94,5 +124,9 @@ sealed class Dependencies {
 
     protected fun DependencyHandlerScope.implementation(dependencyNotation: String) {
         "implementation"(dependencyNotation)
+    }
+
+    protected fun DependencyHandlerScope.ksp(dependencyNotation: String) {
+        "ksp"(dependencyNotation)
     }
 }
