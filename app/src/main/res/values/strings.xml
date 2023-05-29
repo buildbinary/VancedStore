@@ -5,9 +5,13 @@
     <string name="navigation_library">Library</string>
     <string name="navigation_more">More</string>
     <string name="navigation_repositories">Repositories</string>
+    <string name="navigation_themes">Themes</string>
 
     <string name="dialog_save">Save</string>
     <string name="dialog_cancel">Cancel</string>
+
+    <string name="browse_category_vanced">Vanced</string>
+    <string name="browse_category_apps">Apps</string>
 
     <string name="repositories_add_title">New repository</string>
     <string name="repositories_add_label_name">Name</string>

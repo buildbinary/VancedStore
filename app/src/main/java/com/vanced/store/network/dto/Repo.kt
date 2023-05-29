@@ -4,10 +4,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AppsRepositoryDto(
+data class RepoDto(
     @SerialName("name")
     val name: String,
 
-    @SerialName("apps")
-    val apps: List<PartialAppDto>
+    @SerialName("description")
+    val description: String
 )

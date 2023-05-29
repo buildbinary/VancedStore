@@ -59,17 +59,14 @@ private fun RepositoryCard(
     modifier: Modifier = Modifier,
 ) {
     VSElevatedCard(
-        modifier = modifier,
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 2.dp
-        )
+        modifier = modifier
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(VSTheme.spacing.innerLarge)
+                .padding(VSTheme.spacing.medium)
                 .heightIn(min = 48.dp),
-            horizontalArrangement = Arrangement.spacedBy(VSTheme.spacing.innerLarge),
+            horizontalArrangement = Arrangement.spacedBy(VSTheme.spacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.weight(1f)) {

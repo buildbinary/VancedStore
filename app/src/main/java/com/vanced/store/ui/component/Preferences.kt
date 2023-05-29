@@ -1,7 +1,6 @@
 package com.vanced.store.ui.component
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,16 +17,13 @@ fun Preference(
 ) {
     VSElevatedCard(
         modifier = modifier,
-        onClick = onClick,
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 2.dp
-        )
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
                 .heightIn(min = 48.dp)
-                .padding(VSTheme.spacing.innerLarge),
-            horizontalArrangement = Arrangement.spacedBy(VSTheme.spacing.innerLarge),
+                .padding(VSTheme.spacing.medium),
+            horizontalArrangement = Arrangement.spacedBy(VSTheme.spacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.weight(1f)) {

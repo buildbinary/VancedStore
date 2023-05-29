@@ -13,20 +13,49 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.vanced.store.R
-import com.vanced.store.db.entity.Repository
-import com.vanced.store.ui.component.VSOutlinedTextField
+import com.vanced.store.domain.model.DomainRepo
+import com.vanced.store.ui.navigation.VSNavigator
 import com.vanced.store.ui.theme.VSTheme
-import com.vanced.store.ui.viewmodel.RepositoriesViewModel
+import com.vanced.store.ui.viewmodel.RepoViewModel
 import com.vanced.store.ui.widget.*
 import org.koin.androidx.compose.getViewModel
+
+sealed interface ReposState {
+    @Stable
+    object Loading : ReposState
+
+    @Stable
+    data class Success(val repos: List<DomainRepo>) : ReposState
+
+    @Stable
+    object Error : ReposState
+}
+
+@Composable
+fun RepositoriesScreen(
+    navigator: VSNavigator,
+    modifier: Modifier = Modifier,
+    viewModel: RepoViewModel = getViewModel(),
+) {
+    RepositoriesScreen(
+        onBackClick = {
+            navigator.back()
+        },
+        onRepoRemove = viewModel::removeRepository,
+        onRepoSave = viewModel::saveRepository,
+        state = viewModel.state,
+        modifier = modifier,
+    )
+}
 
 @Composable
 fun RepositoriesScreen(
     onBackClick: () -> Unit,
+    onRepoRemove: (String) -> Unit,
+    onRepoSave: (String) -> Unit,
+    state: ReposState,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: RepositoriesViewModel = getViewModel()
-    val state by viewModel.state.collectAsState()
     var addDialogVisible by remember { mutableStateOf(false) }
     ScreenScaffold(
         modifier = modifier,
@@ -36,31 +65,22 @@ fun RepositoriesScreen(
                 onBackClick = onBackClick
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { addDialogVisible = true }) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_add),
-                    contentDescription = null
-                )
-            }
-        }
+        floatingActionButton = { FAB(onClick = { addDialogVisible = true }) }
     ) { paddingValues ->
         Body(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
             state = state,
-            onRepositoryRemove = { repository ->
-                viewModel.deleteRepo(repository)
-            }
+            onRepositoryRemove = onRepoRemove
         )
     }
     if (addDialogVisible) {
         AddDialog(
             onDismissRequest = { addDialogVisible = false },
             onCancel = { addDialogVisible = false },
-            onSave = { name, endpoint ->
-                viewModel.saveRepo(name, endpoint)
+            onSave = { endpoint ->
+                onRepoSave(endpoint)
                 addDialogVisible = false
             }
         )
@@ -69,29 +89,34 @@ fun RepositoriesScreen(
 
 @Composable
 private fun Body(
-    state: RepositoriesViewModel.State,
-    onRepositoryRemove: (Repository) -> Unit,
+    state: ReposState,
+    onRepositoryRemove: (endpoint: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AnimatedContent(
         modifier = modifier,
         targetState = state,
-        transitionSpec = { fadeIn() with  fadeOut() }
+        transitionSpec = {
+            fadeIn() with fadeOut()
+        }
     ) { animatedState ->
         when (animatedState) {
-            is RepositoriesViewModel.State.Loading -> {
+            is ReposState.Loading -> {
                 ScreenLoading(
                     modifier = Modifier
                         .fillMaxSize()
                 )
             }
-            is RepositoriesViewModel.State.Loaded -> {
-                ScreenLoaded(
+            is ReposState.Success -> {
+                ScreenSuccess(
                     modifier = Modifier
                         .fillMaxSize(),
-                    repositories = animatedState.repositories,
+                    repositories = animatedState.repos,
                     onRepositoryRemove = onRepositoryRemove
                 )
+            }
+            is ReposState.Error -> {
+
             }
         }
     }
@@ -112,16 +137,16 @@ private fun ScreenLoading(
 }
 
 @Composable
-private fun ScreenLoaded(
-    repositories: List<Repository>,
-    onRepositoryRemove: (Repository) -> Unit,
+private fun ScreenSuccess(
+    repositories: List<DomainRepo>,
+    onRepositoryRemove: (endpoint: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     CardLazyColumn(modifier = modifier) {
         items(repositories) { repository ->
             RepositoryCardLoaded(
                 modifier = Modifier.fillParentMaxWidth(),
-                onRemove = { onRepositoryRemove(repository) },
+                onRemove = { onRepositoryRemove(repository.endpoint) },
                 name = repository.name
             )
         }
@@ -129,21 +154,20 @@ private fun ScreenLoaded(
 }
 
 @Composable
-fun AddDialog(
+private fun AddDialog(
     onDismissRequest: () -> Unit,
     onCancel: () -> Unit,
-    onSave: (name: String, endpoint: String) -> Unit,
+    onSave: (endpoint: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var name by remember { mutableStateOf("") }
     var endpoint by remember { mutableStateOf("") }
     AlertDialog(
         modifier = modifier,
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(
-                enabled = name.isNotEmpty() && endpoint.isNotEmpty(),
-                onClick = { onSave(name, endpoint) },
+                enabled = endpoint.isNotEmpty(),
+                onClick = { onSave(endpoint) },
             ) {
                 Text(stringResource(R.string.dialog_save))
             }
@@ -157,15 +181,10 @@ fun AddDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(VSTheme.spacing.innerLarge),
+                verticalArrangement = Arrangement.spacedBy(VSTheme.spacing.medium),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                VSOutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.repositories_add_label_name)) }
-                )
-                VSOutlinedTextField(
+                OutlinedTextField(
                     value = endpoint,
                     onValueChange = { endpoint = it },
                     label = { Text(stringResource(R.string.repositories_add_label_endpoint)) }
@@ -194,4 +213,14 @@ private fun AppBar(
         },
         scrollBehavior = scrollBehavior
     )
+}
+
+@Composable
+private fun FAB(onClick: () -> Unit) {
+    FloatingActionButton(onClick = onClick) {
+        Icon(
+            painter = painterResource(R.drawable.ic_add),
+            contentDescription = null
+        )
+    }
 }

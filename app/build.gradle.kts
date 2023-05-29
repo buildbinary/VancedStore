@@ -9,12 +9,14 @@ plugins {
 }
 
 android {
-    compileSdk = 32
+    namespace = "com.vanced.store"
+
+    compileSdk = 33
 
     defaultConfig {
         applicationId = "com.vanced.store"
         minSdk = 21
-        targetSdk = 32
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
     }
@@ -31,7 +33,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = Dependencies.Compose.version
+        kotlinCompilerExtensionVersion = Dependencies.Compose.compilerVersion
     }
 
     compileOptions {
